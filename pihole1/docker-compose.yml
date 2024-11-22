@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  pihole1:
+    image: pihole/pihole:latest
+    container_name: pihole1
+    environment:
+      TZ: Europe/Berlin
+      WEBPASSWORD: BrianDiStefano2002
+    volumes:
+      - ./pihole1/etc-pihole:/etc/pihole
+      - ./pihole1/etc-dnsmasq.d:/etc/dnsmasq.d
+    ports:
+      - "5301:53/tcp"
+      - "5301:53/udp"
+      - "8001:80"
+    restart: unless-stopped
+
+  pihole2:
+    image: pihole/pihole:latest
+    container_name: pihole2
+    environment:
+      TZ: Europe/Berlin
+      WEBPASSWORD: BrianDiStefano2002
+    volumes:
+      - ./pihole2/etc-pihole:/etc/pihole
+      - ./pihole2/etc-dnsmasq.d:/etc/dnsmasq.d
+    ports:
+      - "5302:53/tcp"
+      - "5302:53/udp"
+      - "8002:80"
+    restart: unless-stopped
+
+  dnsdist:
+    image: powerdns/dnsdist-17:latest
+    container_name: dnsdist
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+    restart: unless-stopped
+    volumes:
+      - ./dnsdist:/etc/dnsdist
+    command: >
+      dnsdist
+      --uid=0
+      --gid=0
+      --local=0.0.0.0:53
+      --controlSocket=/var/run/dnsdist/dnsdist.sock
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    restart: unless-stopped
